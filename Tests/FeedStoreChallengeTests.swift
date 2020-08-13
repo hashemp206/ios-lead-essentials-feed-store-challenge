@@ -8,6 +8,40 @@ import FeedStoreChallenge
 
 class CoreDataFeedStore: FeedStore {
     
+    private lazy var managedObjectContext: NSManagedObjectContext = {
+         let managedObjectContext = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+         managedObjectContext.persistentStoreCoordinator = self.persistentStoreCoordinator
+         return managedObjectContext
+    }()
+    
+    private lazy var managedObjectModel: NSManagedObjectModel = {
+        let modelURL = Bundle.main.url(forResource: "imageFeed", withExtension: "momd")!
+        let managedObjectModel = NSManagedObjectModel(contentsOf: modelURL)!
+        
+        return managedObjectModel
+    }()
+
+    private lazy var persistentStoreCoordinator: NSPersistentStoreCoordinator = {
+        let persistentStoreCoordinator = NSPersistentStoreCoordinator(managedObjectModel: self.managedObjectModel)
+
+        let fileManager = FileManager.default
+        let storeName = "imageFeed.sqlite"
+
+        let documentsDirectoryURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+
+        let persistentStoreURL = documentsDirectoryURL.appendingPathComponent(storeName)
+        try! persistentStoreCoordinator.addPersistentStore(ofType: NSSQLiteStoreType,
+        configurationName: nil,
+        at: persistentStoreURL,
+        options: nil)
+        
+        return persistentStoreCoordinator
+    }()
+    
+    init() {
+        
+    }
+    
     func retrieve(completion: @escaping FeedStore.RetrievalCompletion) {
         completion(.empty)
     }
@@ -17,7 +51,7 @@ class CoreDataFeedStore: FeedStore {
     }
     
     func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
-        fatalError("Must implemented")
+        
     }
 }
 
@@ -42,9 +76,9 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 	}
 
 	func test_retrieve_deliversFoundValuesOnNonEmptyCache() {
-//		let sut = makeSUT()
-//
-//		assertThatRetrieveDeliversFoundValuesOnNonEmptyCache(on: sut)
+		let sut = makeSUT()
+
+		assertThatRetrieveDeliversFoundValuesOnNonEmptyCache(on: sut)
 	}
 
 	func test_retrieve_hasNoSideEffectsOnNonEmptyCache() {
