@@ -6,16 +6,92 @@ import XCTest
 import CoreData
 import FeedStoreChallenge
 
+@objc(Feed)
+internal class Feed: NSManagedObject {
+    internal var local: [LocalFeedImage] {
+        return (items!.array as! [FeedImage]).map { $0.local }
+    }
+}
+
+extension Feed {
+
+    @nonobjc internal class func fetchRequest() -> NSFetchRequest<Feed> {
+        return NSFetchRequest<Feed>(entityName: "Feed")
+    }
+
+    @NSManaged internal var timestamp: Date?
+    @NSManaged internal var items: NSOrderedSet?
+
+}
+
+// MARK: Generated accessors for items
+extension Feed {
+
+    @objc(insertObject:inItemsAtIndex:)
+    @NSManaged internal func insertIntoItems(_ value: FeedImage, at idx: Int)
+
+    @objc(removeObjectFromItemsAtIndex:)
+    @NSManaged internal func removeFromItems(at idx: Int)
+
+    @objc(insertItems:atIndexes:)
+    @NSManaged internal func insertIntoItems(_ values: [FeedImage], at indexes: NSIndexSet)
+
+    @objc(removeItemsAtIndexes:)
+    @NSManaged internal func removeFromItems(at indexes: NSIndexSet)
+
+    @objc(replaceObjectInItemsAtIndex:withObject:)
+    @NSManaged internal func replaceItems(at idx: Int, with value: FeedImage)
+
+    @objc(replaceItemsAtIndexes:withItems:)
+    @NSManaged internal func replaceItems(at indexes: NSIndexSet, with values: [FeedImage])
+
+    @objc(addItemsObject:)
+    @NSManaged internal func addToItems(_ value: FeedImage)
+
+    @objc(removeItemsObject:)
+    @NSManaged internal func removeFromItems(_ value: FeedImage)
+
+    @objc(addItems:)
+    @NSManaged internal func addToItems(_ values: NSOrderedSet)
+
+    @objc(removeItems:)
+    @NSManaged internal func removeFromItems(_ values: NSOrderedSet)
+
+}
+
+
+@objc(FeedImage)
+internal class FeedImage: NSManagedObject {
+    var local: LocalFeedImage {
+        return LocalFeedImage(id: id!, description: descriptions, location: location, url: url!)
+    }
+}
+
+extension FeedImage {
+
+    @nonobjc internal class func fetchRequest() -> NSFetchRequest<FeedImage> {
+        return NSFetchRequest<FeedImage>(entityName: "FeedImage")
+    }
+
+    @NSManaged internal var descriptions: String?
+    @NSManaged internal var id: UUID?
+    @NSManaged internal var location: String?
+    @NSManaged internal var url: URL?
+
+}
+
+
 class CoreDataFeedStore: FeedStore {
     
     private lazy var managedObjectContext: NSManagedObjectContext = {
          let managedObjectContext = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
          managedObjectContext.persistentStoreCoordinator = self.persistentStoreCoordinator
+        print("managedObjectContext: \(managedObjectContext)")
          return managedObjectContext
     }()
     
     private lazy var managedObjectModel: NSManagedObjectModel = {
-        let modelURL = Bundle.main.url(forResource: "imageFeed", withExtension: "momd")!
+        let modelURL = Bundle(for: type(of: self)).url(forResource: "FeedModel", withExtension: "momd")!
         let managedObjectModel = NSManagedObjectModel(contentsOf: modelURL)!
         
         return managedObjectModel
@@ -24,12 +100,12 @@ class CoreDataFeedStore: FeedStore {
     private lazy var persistentStoreCoordinator: NSPersistentStoreCoordinator = {
         let persistentStoreCoordinator = NSPersistentStoreCoordinator(managedObjectModel: self.managedObjectModel)
 
-        let fileManager = FileManager.default
-        let storeName = "imageFeed.sqlite"
+        let storeName = "FeedModel.sqlite"
 
-        let documentsDirectoryURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let storeURL = URL(fileURLWithPath: "/dev/null")
 
-        let persistentStoreURL = documentsDirectoryURL.appendingPathComponent(storeName)
+        let persistentStoreURL = storeURL.appendingPathComponent(storeName)
+        
         try! persistentStoreCoordinator.addPersistentStore(ofType: NSSQLiteStoreType,
         configurationName: nil,
         at: persistentStoreURL,
@@ -38,12 +114,37 @@ class CoreDataFeedStore: FeedStore {
         return persistentStoreCoordinator
     }()
     
+    private lazy var container: NSPersistentContainer = {
+        let modelURL = Bundle(for: type(of: self)).url(forResource: "FeedModel", withExtension: "momd")!
+        let storeURL = URL(fileURLWithPath: "/dev/null")
+        let model = NSManagedObjectModel(contentsOf: modelURL)!
+        let container = NSPersistentContainer(name: "CoreDataFeedStore", managedObjectModel: model)
+        let description = NSPersistentStoreDescription(url: storeURL)
+        container.persistentStoreDescriptions = [description]
+        container.loadPersistentStores { storeDescription, error in
+            if let error = error {
+                print("Unresolved error \(error)")
+            }
+        }
+        return container
+    }()
+    
     init() {
         
     }
     
     func retrieve(completion: @escaping FeedStore.RetrievalCompletion) {
-        completion(.empty)
+        let managedObjectContext = container.viewContext
+        if let coredataFeed: Feed = try! managedObjectContext.fetch(Feed.fetchRequest()).first, let items = coredataFeed.items, items.array.isEmpty == false {
+            let coredataItems = items.array as! [FeedImage]
+        
+            completion(.found(feed: coredataItems.map{ $0.local }, timestamp: coredataFeed.timestamp!))
+            
+        } else {
+            completion(.empty)
+        }
+        
+        
     }
     
     func deleteCachedFeed(completion: @escaping DeletionCompletion) {
@@ -52,6 +153,22 @@ class CoreDataFeedStore: FeedStore {
     
     func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
         
+        let managedObjectContext = container.viewContext
+        let coredataFeed = Feed(context: managedObjectContext)
+        coredataFeed.timestamp = timestamp
+        let coredataFeedImages = feed.map { localFeedImage -> FeedImage in
+            let item = FeedImage(context: managedObjectContext)
+            item.id = localFeedImage.id
+            item.descriptions = localFeedImage.description
+            item.location = localFeedImage.location
+            item.url = localFeedImage.url
+            return item
+        }
+        
+        coredataFeed.addToItems(NSOrderedSet(array: coredataFeedImages))
+        
+        try! managedObjectContext.save()
+        completion(.none)
     }
 }
 
