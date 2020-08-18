@@ -83,37 +83,6 @@ extension FeedImage {
 
 class CoreDataFeedStore: FeedStore {
     
-    private lazy var managedObjectContext: NSManagedObjectContext = {
-         let managedObjectContext = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
-         managedObjectContext.persistentStoreCoordinator = self.persistentStoreCoordinator
-        print("managedObjectContext: \(managedObjectContext)")
-         return managedObjectContext
-    }()
-    
-    private lazy var managedObjectModel: NSManagedObjectModel = {
-        let modelURL = Bundle(for: type(of: self)).url(forResource: "FeedModel", withExtension: "momd")!
-        let managedObjectModel = NSManagedObjectModel(contentsOf: modelURL)!
-        
-        return managedObjectModel
-    }()
-
-    private lazy var persistentStoreCoordinator: NSPersistentStoreCoordinator = {
-        let persistentStoreCoordinator = NSPersistentStoreCoordinator(managedObjectModel: self.managedObjectModel)
-
-        let storeName = "FeedModel.sqlite"
-
-        let storeURL = URL(fileURLWithPath: "/dev/null")
-
-        let persistentStoreURL = storeURL.appendingPathComponent(storeName)
-        
-        try! persistentStoreCoordinator.addPersistentStore(ofType: NSSQLiteStoreType,
-        configurationName: nil,
-        at: persistentStoreURL,
-        options: nil)
-        
-        return persistentStoreCoordinator
-    }()
-    
     private lazy var container: NSPersistentContainer = {
         let modelURL = Bundle(for: type(of: self)).url(forResource: "FeedModel", withExtension: "momd")!
         let storeURL = URL(fileURLWithPath: "/dev/null")
