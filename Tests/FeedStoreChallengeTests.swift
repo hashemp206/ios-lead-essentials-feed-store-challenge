@@ -83,9 +83,11 @@ extension FeedImage {
 
 class CoreDataFeedStore: FeedStore {
     
-    private lazy var container: NSPersistentContainer = {
+    private let container: NSPersistentContainer
+    
+    init(storeURL: URL) {
         let modelURL = Bundle(for: type(of: self)).url(forResource: "FeedModel", withExtension: "momd")!
-        let storeURL = URL(fileURLWithPath: "/dev/null")
+
         let model = NSManagedObjectModel(contentsOf: modelURL)!
         let container = NSPersistentContainer(name: "CoreDataFeedStore", managedObjectModel: model)
         let description = NSPersistentStoreDescription(url: storeURL)
@@ -95,11 +97,8 @@ class CoreDataFeedStore: FeedStore {
                 print("Unresolved error \(error)")
             }
         }
-        return container
-    }()
-    
-    init() {
         
+        self.container = container
     }
     
     func retrieve(completion: @escaping FeedStore.RetrievalCompletion) {
@@ -224,7 +223,8 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 	// - MARK: Helpers
 	
 	private func makeSUT() -> FeedStore {
-		let sut = CoreDataFeedStore()
+        let blackHoleURL = URL(fileURLWithPath: "/dev/null")
+        let sut = CoreDataFeedStore(storeURL: blackHoleURL)
         trackForMemoryLeaks(sut)
         return sut
 	}
