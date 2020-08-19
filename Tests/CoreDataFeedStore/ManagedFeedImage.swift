@@ -9,17 +9,17 @@
 import CoreData
 import FeedStoreChallenge
 
-@objc(FeedImage)
-internal class FeedImage: NSManagedObject {
+@objc(ManagedFeedImage)
+internal class ManagedFeedImage: NSManagedObject {
     var local: LocalFeedImage {
         return LocalFeedImage(id: id, description: descriptions, location: location, url: url)
     }
 }
 
-extension FeedImage {
+extension ManagedFeedImage {
 
-    @nonobjc internal class func fetchRequest() -> NSFetchRequest<FeedImage> {
-        return NSFetchRequest<FeedImage>(entityName: "FeedImage")
+    @nonobjc internal class func fetchRequest() -> NSFetchRequest<ManagedFeedImage> {
+        return NSFetchRequest<ManagedFeedImage>(entityName: "ManagedFeedImage")
     }
 
     @NSManaged internal var descriptions: String?

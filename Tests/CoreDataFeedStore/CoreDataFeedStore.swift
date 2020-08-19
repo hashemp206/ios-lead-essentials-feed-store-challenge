@@ -32,7 +32,7 @@ final class CoreDataFeedStore: FeedStore {
     func retrieve(completion: @escaping FeedStore.RetrievalCompletion) {
         let managedObjectContext = container.viewContext
         do {
-            if let coredataFeed: Feed = try managedObjectContext.fetch(Feed.fetchRequest()).first {
+            if let coredataFeed: ManagedFeed = try managedObjectContext.fetch(ManagedFeed.fetchRequest()).first {
                 
                 let localFeedImages = coredataFeed.local
                 completion(.found(feed: localFeedImages, timestamp: coredataFeed.timestamp))
@@ -47,7 +47,7 @@ final class CoreDataFeedStore: FeedStore {
     
     func deleteCachedFeed(completion: @escaping DeletionCompletion) {
         let context = container.viewContext
-        try! context.fetch(Feed.fetchRequest()).first.map(context.delete)
+        try! context.fetch(ManagedFeed.fetchRequest()).first.map(context.delete)
         completion(nil)
     }
     
@@ -55,10 +55,10 @@ final class CoreDataFeedStore: FeedStore {
         
         let managedObjectContext = container.viewContext
         do {
-            let coredataFeed = try Feed.UniqueFeed(in: managedObjectContext)
+            let coredataFeed = try ManagedFeed.UniqueFeed(in: managedObjectContext)
             coredataFeed.timestamp = timestamp
-            let coredataFeedImages = feed.map { localFeedImage -> FeedImage in
-                let item = FeedImage(context: managedObjectContext)
+            let coredataFeedImages = feed.map { localFeedImage -> ManagedFeedImage in
+                let item = ManagedFeedImage(context: managedObjectContext)
                 item.id = localFeedImage.id
                 item.descriptions = localFeedImage.description
                 item.location = localFeedImage.location
