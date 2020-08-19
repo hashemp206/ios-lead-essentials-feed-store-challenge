@@ -7,13 +7,65 @@
 //
 
 import CoreData
-import FeedStoreChallenge
 
-final class CoreDataFeedStore: FeedStore {
+// MARK: - Managed Object Entities
+
+@objc(ManagedFeed)
+private class ManagedFeed: NSManagedObject {
+    
+    internal var local: [LocalFeedImage] {
+        return (items.compactMap{ $0 as? ManagedFeedImage }).map { $0.local }
+    }
+    
+    static func UniqueFeed(in context: NSManagedObjectContext) throws -> ManagedFeed {
+        try context.fetch(ManagedFeed.fetchRequest()).first.map(context.delete)
+        return ManagedFeed(context: context)
+    }
+}
+
+extension ManagedFeed {
+
+    @nonobjc internal class func fetchRequest() -> NSFetchRequest<ManagedFeed> {
+        return NSFetchRequest<ManagedFeed>(entityName: "ManagedFeed")
+    }
+
+    @NSManaged internal var timestamp: Date
+    @NSManaged internal var items: NSOrderedSet
+}
+
+// MARK: Generated accessors for items
+extension ManagedFeed {
+
+    @objc(addItems:)
+    @NSManaged internal func addToItems(_ values: NSOrderedSet)
+}
+
+@objc(ManagedFeedImage)
+private class ManagedFeedImage: NSManagedObject {
+    var local: LocalFeedImage {
+        return LocalFeedImage(id: id, description: descriptions, location: location, url: url)
+    }
+}
+
+extension ManagedFeedImage {
+
+    @nonobjc internal class func fetchRequest() -> NSFetchRequest<ManagedFeedImage> {
+        return NSFetchRequest<ManagedFeedImage>(entityName: "ManagedFeedImage")
+    }
+
+    @NSManaged internal var descriptions: String?
+    @NSManaged internal var id: UUID
+    @NSManaged internal var location: String?
+    @NSManaged internal var url: URL
+
+}
+
+// MARK: - Core Data Feed Store
+public final class CoreDataFeedStore: FeedStore {
     
     private let container: NSPersistentContainer
     
-    init(storeURL: URL) {
+    public init(storeURL: URL) {
         let modelURL = Bundle(for: type(of: self)).url(forResource: "FeedModel", withExtension: "momd")!
 
         let model = NSManagedObjectModel(contentsOf: modelURL)!
@@ -29,7 +81,7 @@ final class CoreDataFeedStore: FeedStore {
         self.container = container
     }
     
-    func retrieve(completion: @escaping FeedStore.RetrievalCompletion) {
+    public func retrieve(completion: @escaping FeedStore.RetrievalCompletion) {
         let managedObjectContext = container.viewContext
         do {
             if let coredataFeed: ManagedFeed = try managedObjectContext.fetch(ManagedFeed.fetchRequest()).first {
@@ -45,13 +97,13 @@ final class CoreDataFeedStore: FeedStore {
         }
     }
     
-    func deleteCachedFeed(completion: @escaping DeletionCompletion) {
+    public func deleteCachedFeed(completion: @escaping DeletionCompletion) {
         let context = container.viewContext
         try! context.fetch(ManagedFeed.fetchRequest()).first.map(context.delete)
         completion(nil)
     }
     
-    func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
+    public func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
         
         let managedObjectContext = container.viewContext
         do {
