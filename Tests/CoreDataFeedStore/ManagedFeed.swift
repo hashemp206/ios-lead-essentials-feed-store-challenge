@@ -11,8 +11,14 @@ import FeedStoreChallenge
 
 @objc(ManagedFeed)
 internal class ManagedFeed: NSManagedObject {
+    
     internal var local: [LocalFeedImage] {
         return (items.compactMap{ $0 as? ManagedFeedImage }).map { $0.local }
+    }
+    
+    static func UniqueFeed(in context: NSManagedObjectContext) throws -> ManagedFeed {
+        try context.fetch(ManagedFeed.fetchRequest()).first.map(context.delete)
+        return ManagedFeed(context: context)
     }
 }
 
@@ -24,11 +30,6 @@ extension ManagedFeed {
 
     @NSManaged internal var timestamp: Date
     @NSManaged internal var items: NSOrderedSet
-
-    static func UniqueFeed(in context: NSManagedObjectContext) throws -> ManagedFeed {
-        try context.fetch(ManagedFeed.fetchRequest()).first.map(context.delete)
-        return ManagedFeed(context: context)
-    }
 }
 
 // MARK: Generated accessors for items
