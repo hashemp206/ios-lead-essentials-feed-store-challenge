@@ -107,17 +107,18 @@ class CoreDataFeedStore: FeedStore {
     
     func retrieve(completion: @escaping FeedStore.RetrievalCompletion) {
         let managedObjectContext = container.viewContext
-        if let coredataFeed: Feed = try! managedObjectContext.fetch(Feed.fetchRequest()).first {
-            
-            let localFeedImages = coredataFeed.local
-        
-            completion(.found(feed: localFeedImages, timestamp: coredataFeed.timestamp))
-            
-        } else {
-            completion(.empty)
+        do {
+            if let coredataFeed: Feed = try managedObjectContext.fetch(Feed.fetchRequest()).first {
+                
+                let localFeedImages = coredataFeed.local
+                completion(.found(feed: localFeedImages, timestamp: coredataFeed.timestamp))
+                
+            } else {
+                completion(.empty)
+            }
+        } catch {
+            completion(.failure(error))
         }
-        
-        
     }
     
     func deleteCachedFeed(completion: @escaping DeletionCompletion) {
@@ -129,21 +130,25 @@ class CoreDataFeedStore: FeedStore {
     func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
         
         let managedObjectContext = container.viewContext
-        let coredataFeed = try! Feed.UniqueFeed(in: managedObjectContext)
-        coredataFeed.timestamp = timestamp
-        let coredataFeedImages = feed.map { localFeedImage -> FeedImage in
-            let item = FeedImage(context: managedObjectContext)
-            item.id = localFeedImage.id
-            item.descriptions = localFeedImage.description
-            item.location = localFeedImage.location
-            item.url = localFeedImage.url
-            return item
+        do {
+            let coredataFeed = try Feed.UniqueFeed(in: managedObjectContext)
+            coredataFeed.timestamp = timestamp
+            let coredataFeedImages = feed.map { localFeedImage -> FeedImage in
+                let item = FeedImage(context: managedObjectContext)
+                item.id = localFeedImage.id
+                item.descriptions = localFeedImage.description
+                item.location = localFeedImage.location
+                item.url = localFeedImage.url
+                return item
+            }
+            
+            coredataFeed.addToItems(NSOrderedSet(array: coredataFeedImages))
+            
+            try managedObjectContext.save()
+            completion(.none)
+        } catch {
+            completion(error)
         }
-        
-        coredataFeed.addToItems(NSOrderedSet(array: coredataFeedImages))
-        
-        try! managedObjectContext.save()
-        completion(.none)
     }
 }
 
@@ -237,56 +242,3 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 	}
 	
 }
-
-//
-// Uncomment the following tests if your implementation has failable operations.
-// Otherwise, delete the commented out code!
-//
-
-//extension FeedStoreChallengeTests: FailableRetrieveFeedStoreSpecs {
-//
-//	func test_retrieve_deliversFailureOnRetrievalError() {
-////		let sut = makeSUT()
-////
-////		assertThatRetrieveDeliversFailureOnRetrievalError(on: sut)
-//	}
-//
-//	func test_retrieve_hasNoSideEffectsOnFailure() {
-////		let sut = makeSUT()
-////
-////		assertThatRetrieveHasNoSideEffectsOnFailure(on: sut)
-//	}
-//
-//}
-
-//extension FeedStoreChallengeTests: FailableInsertFeedStoreSpecs {
-//
-//	func test_insert_deliversErrorOnInsertionError() {
-////		let sut = makeSUT()
-////
-////		assertThatInsertDeliversErrorOnInsertionError(on: sut)
-//	}
-//
-//	func test_insert_hasNoSideEffectsOnInsertionError() {
-////		let sut = makeSUT()
-////
-////		assertThatInsertHasNoSideEffectsOnInsertionError(on: sut)
-//	}
-//
-//}
-
-//extension FeedStoreChallengeTests: FailableDeleteFeedStoreSpecs {
-//
-//	func test_delete_deliversErrorOnDeletionError() {
-////		let sut = makeSUT()
-////
-////		assertThatDeleteDeliversErrorOnDeletionError(on: sut)
-//	}
-//
-//	func test_delete_hasNoSideEffectsOnDeletionError() {
-////		let sut = makeSUT()
-////
-////		assertThatDeleteHasNoSideEffectsOnDeletionError(on: sut)
-//	}
-//
-//}
