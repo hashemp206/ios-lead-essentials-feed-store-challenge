@@ -9,7 +9,7 @@ import FeedStoreChallenge
 @objc(Feed)
 internal class Feed: NSManagedObject {
     internal var local: [LocalFeedImage] {
-        return (items!.array as! [FeedImage]).map { $0.local }
+        return (items.compactMap{ $0 as? FeedImage }).map { $0.local }
     }
 }
 
@@ -19,8 +19,8 @@ extension Feed {
         return NSFetchRequest<Feed>(entityName: "Feed")
     }
 
-    @NSManaged internal var timestamp: Date?
-    @NSManaged internal var items: NSOrderedSet?
+    @NSManaged internal var timestamp: Date
+    @NSManaged internal var items: NSOrderedSet
 
     static func UniqueFeed(in context: NSManagedObjectContext) throws -> Feed {
         try context.fetch(Feed.fetchRequest()).first.map(context.delete)
@@ -67,7 +67,7 @@ extension Feed {
 @objc(FeedImage)
 internal class FeedImage: NSManagedObject {
     var local: LocalFeedImage {
-        return LocalFeedImage(id: id!, description: descriptions, location: location, url: url!)
+        return LocalFeedImage(id: id, description: descriptions, location: location, url: url)
     }
 }
 
@@ -78,9 +78,9 @@ extension FeedImage {
     }
 
     @NSManaged internal var descriptions: String?
-    @NSManaged internal var id: UUID?
+    @NSManaged internal var id: UUID
     @NSManaged internal var location: String?
-    @NSManaged internal var url: URL?
+    @NSManaged internal var url: URL
 
 }
 
@@ -107,10 +107,11 @@ class CoreDataFeedStore: FeedStore {
     
     func retrieve(completion: @escaping FeedStore.RetrievalCompletion) {
         let managedObjectContext = container.viewContext
-        if let coredataFeed: Feed = try! managedObjectContext.fetch(Feed.fetchRequest()).first, let items = coredataFeed.items, items.array.isEmpty == false {
-            let coredataItems = items.array as! [FeedImage]
+        if let coredataFeed: Feed = try! managedObjectContext.fetch(Feed.fetchRequest()).first {
+            
+            let localFeedImages = coredataFeed.local
         
-            completion(.found(feed: coredataItems.map{ $0.local }, timestamp: coredataFeed.timestamp!))
+            completion(.found(feed: localFeedImages, timestamp: coredataFeed.timestamp))
             
         } else {
             completion(.empty)
