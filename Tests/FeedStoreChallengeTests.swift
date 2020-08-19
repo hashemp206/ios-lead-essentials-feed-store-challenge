@@ -22,6 +22,10 @@ extension Feed {
     @NSManaged internal var timestamp: Date?
     @NSManaged internal var items: NSOrderedSet?
 
+    static func UniqueFeed(in context: NSManagedObjectContext) throws -> Feed {
+        try context.fetch(Feed.fetchRequest()).first.map(context.delete)
+        return Feed(context: context)
+    }
 }
 
 // MARK: Generated accessors for items
@@ -122,7 +126,7 @@ class CoreDataFeedStore: FeedStore {
     func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
         
         let managedObjectContext = container.viewContext
-        let coredataFeed = Feed(context: managedObjectContext)
+        let coredataFeed = try! Feed.UniqueFeed(in: managedObjectContext)
         coredataFeed.timestamp = timestamp
         let coredataFeedImages = feed.map { localFeedImage -> FeedImage in
             let item = FeedImage(context: managedObjectContext)
@@ -185,9 +189,9 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 	}
 
 	func test_insert_overridesPreviouslyInsertedCacheValues() {
-//		let sut = makeSUT()
-//
-//		assertThatInsertOverridesPreviouslyInsertedCacheValues(on: sut)
+		let sut = makeSUT()
+
+		assertThatInsertOverridesPreviouslyInsertedCacheValues(on: sut)
 	}
 
 	func test_delete_deliversNoErrorOnEmptyCache() {
