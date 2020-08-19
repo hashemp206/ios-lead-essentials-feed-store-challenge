@@ -64,6 +64,9 @@ extension ManagedFeedImage {
 public final class CoreDataFeedStore: FeedStore {
     
     private let container: NSPersistentContainer
+    private lazy var context: NSManagedObjectContext = {
+        return container.newBackgroundContext()
+    }()
     
     public init(storeURL: URL) {
         let modelURL = Bundle(for: type(of: self)).url(forResource: "FeedModel", withExtension: "momd")!
@@ -82,48 +85,55 @@ public final class CoreDataFeedStore: FeedStore {
     }
     
     public func retrieve(completion: @escaping FeedStore.RetrievalCompletion) {
-        let managedObjectContext = container.viewContext
-        do {
-            if let coredataFeed: ManagedFeed = try managedObjectContext.fetch(ManagedFeed.fetchRequest()).first {
-                
-                let localFeedImages = coredataFeed.local
-                completion(.found(feed: localFeedImages, timestamp: coredataFeed.timestamp))
-                
-            } else {
-                completion(.empty)
+        
+        let context = self.context
+        context.perform {
+            do {
+                if let coredataFeed: ManagedFeed = try context.fetch(ManagedFeed.fetchRequest()).first {
+                    
+                    let localFeedImages = coredataFeed.local
+                    completion(.found(feed: localFeedImages, timestamp: coredataFeed.timestamp))
+                    
+                } else {
+                    completion(.empty)
+                }
+            } catch {
+                completion(.failure(error))
             }
-        } catch {
-            completion(.failure(error))
         }
     }
     
     public func deleteCachedFeed(completion: @escaping DeletionCompletion) {
-        let context = container.viewContext
-        try! context.fetch(ManagedFeed.fetchRequest()).first.map(context.delete)
-        completion(nil)
+        let context = self.context
+        context.perform {
+            try! context.fetch(ManagedFeed.fetchRequest()).first.map(context.delete)
+            completion(nil)
+        }
     }
     
     public func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
         
-        let managedObjectContext = container.viewContext
-        do {
-            let coredataFeed = try ManagedFeed.UniqueFeed(in: managedObjectContext)
-            coredataFeed.timestamp = timestamp
-            let coredataFeedImages = feed.map { localFeedImage -> ManagedFeedImage in
-                let item = ManagedFeedImage(context: managedObjectContext)
-                item.id = localFeedImage.id
-                item.descriptions = localFeedImage.description
-                item.location = localFeedImage.location
-                item.url = localFeedImage.url
-                return item
+        let context = self.context
+        context.perform {
+            do {
+                let coredataFeed = try ManagedFeed.UniqueFeed(in: context)
+                coredataFeed.timestamp = timestamp
+                let coredataFeedImages = feed.map { localFeedImage -> ManagedFeedImage in
+                    let item = ManagedFeedImage(context: context)
+                    item.id = localFeedImage.id
+                    item.descriptions = localFeedImage.description
+                    item.location = localFeedImage.location
+                    item.url = localFeedImage.url
+                    return item
+                }
+                
+                coredataFeed.addToItems(NSOrderedSet(array: coredataFeedImages))
+                
+                try context.save()
+                completion(.none)
+            } catch {
+                completion(error)
             }
-            
-            coredataFeed.addToItems(NSOrderedSet(array: coredataFeedImages))
-            
-            try managedObjectContext.save()
-            completion(.none)
-        } catch {
-            completion(error)
         }
     }
 }
