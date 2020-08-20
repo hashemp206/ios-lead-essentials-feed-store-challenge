@@ -35,9 +35,7 @@ We advise you to invest some time and effort to produce a clean and well-present
 Finally, add to this README file:
 
 ### Comments and remarks you think other developers will find useful.
-
-...
+In order to not get forced to clear data base for each test, use magical linux specific **black hole url: "/dev/null"**. everything you create and put inside this hole will not be retrievable. 
 
 ### The Dependency Diagram demonstrating the architecture of your solution. 
-
-...
+![CoreData implementation dependency diagram](CoreDataFeedStoreDiagram.png)
