@@ -86,7 +86,6 @@ class CoreDataFeedStore: FeedStore {
     private lazy var managedObjectContext: NSManagedObjectContext = {
          let managedObjectContext = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
          managedObjectContext.persistentStoreCoordinator = self.persistentStoreCoordinator
-        print("managedObjectContext: \(managedObjectContext)")
          return managedObjectContext
     }()
     
@@ -134,7 +133,6 @@ class CoreDataFeedStore: FeedStore {
     }
     
     func retrieve(completion: @escaping FeedStore.RetrievalCompletion) {
-        let managedObjectContext = container.viewContext
         if let coredataFeed: Feed = try! managedObjectContext.fetch(Feed.fetchRequest()).first, let items = coredataFeed.items, items.array.isEmpty == false {
             let coredataItems = items.array as! [FeedImage]
         
@@ -153,7 +151,6 @@ class CoreDataFeedStore: FeedStore {
     
     func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
         
-        let managedObjectContext = container.viewContext
         let coredataFeed = Feed(context: managedObjectContext)
         coredataFeed.timestamp = timestamp
         let coredataFeedImages = feed.map { localFeedImage -> FeedImage in
