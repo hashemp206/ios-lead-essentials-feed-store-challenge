@@ -16,11 +16,6 @@ private class ManagedFeed: NSManagedObject {
     internal var local: [LocalFeedImage] {
         return (items.compactMap{ $0 as? ManagedFeedImage }).map { $0.local }
     }
-    
-    static func UniqueFeed(in context: NSManagedObjectContext) throws -> ManagedFeed {
-        try context.fetch(ManagedFeed.fetchRequest()).first.map(context.delete)
-        return ManagedFeed(context: context)
-    }
 }
 
 extension ManagedFeed {
@@ -84,12 +79,31 @@ public final class CoreDataFeedStore: FeedStore {
         self.container = container
     }
     
+    private func fetchCurrentFeed() throws -> ManagedFeed? {
+        return try context.fetch(ManagedFeed.fetchRequest()).first
+    }
+    
+    private func deleteCurrentFeed() throws {
+        do {
+            if let currentFeed = try fetchCurrentFeed() {
+                context.delete(currentFeed)
+            }
+        } catch {
+            throw error
+        }
+    }
+    
+    private func uniqueFeed() throws -> ManagedFeed {
+        try deleteCurrentFeed()
+        return ManagedFeed(context: context)
+    }
+    
     public func retrieve(completion: @escaping FeedStore.RetrievalCompletion) {
         
         let context = self.context
         context.perform {
             do {
-                if let coredataFeed: ManagedFeed = try context.fetch(ManagedFeed.fetchRequest()).first {
+                if let coredataFeed: ManagedFeed = try self.fetchCurrentFeed() {
                     
                     let localFeedImages = coredataFeed.local
                     completion(.found(feed: localFeedImages, timestamp: coredataFeed.timestamp))
@@ -107,7 +121,7 @@ public final class CoreDataFeedStore: FeedStore {
         let context = self.context
         context.perform {
             do {
-                try context.fetch(ManagedFeed.fetchRequest()).first.map(context.delete)
+                try self.deleteCurrentFeed()
                 completion(nil)
             } catch {
                 completion(error)
@@ -120,7 +134,7 @@ public final class CoreDataFeedStore: FeedStore {
         let context = self.context
         context.perform {
             do {
-                let coredataFeed = try ManagedFeed.UniqueFeed(in: context)
+                let coredataFeed = try self.uniqueFeed()
                 coredataFeed.timestamp = timestamp
                 let coredataFeedImages = feed.map { localFeedImage -> ManagedFeedImage in
                     let item = ManagedFeedImage(context: context)
