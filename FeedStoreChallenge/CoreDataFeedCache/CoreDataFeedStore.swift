@@ -72,7 +72,7 @@ public final class CoreDataFeedStore: FeedStore {
         container.persistentStoreDescriptions = [description]
         container.loadPersistentStores { storeDescription, error in
             if let error = error {
-                print("Unresolved error \(error)")
+                fatalError("unable to load persistant error: \(error)")
             }
         }
         
