@@ -169,8 +169,6 @@ extension FeedStoreSpecs where Self: XCTestCase {
 				break
 				
             case let (.found(expectedFeed, expectedTimestamp), .found(retrievedFeed, retrievedTimestamp)):
-                print("retrieved feed: \(retrievedFeed)")
-                print("expected feed: \(expectedFeed)")
 				XCTAssertEqual(retrievedFeed, expectedFeed, file: file, line: line)
 				XCTAssertEqual(retrievedTimestamp, expectedTimestamp, file: file, line: line)
 				
