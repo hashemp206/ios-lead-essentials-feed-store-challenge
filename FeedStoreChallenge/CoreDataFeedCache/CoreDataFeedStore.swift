@@ -84,12 +84,8 @@ public final class CoreDataFeedStore: FeedStore {
     }
     
     private func deleteCurrentFeed() throws {
-        do {
-            if let currentFeed = try fetchCurrentFeed() {
-                context.delete(currentFeed)
-            }
-        } catch {
-            throw error
+        if let currentFeed = try fetchCurrentFeed() {
+            context.delete(currentFeed)
         }
     }
     
@@ -100,7 +96,6 @@ public final class CoreDataFeedStore: FeedStore {
     
     public func retrieve(completion: @escaping FeedStore.RetrievalCompletion) {
         
-        let context = self.context
         context.perform {
             do {
                 if let coredataFeed: ManagedFeed = try self.fetchCurrentFeed() {
@@ -118,7 +113,6 @@ public final class CoreDataFeedStore: FeedStore {
     }
     
     public func deleteCachedFeed(completion: @escaping DeletionCompletion) {
-        let context = self.context
         context.perform {
             do {
                 try self.deleteCurrentFeed()
