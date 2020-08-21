@@ -21,7 +21,6 @@
 		94A5884C24ED2BDB00E7C68A /* CoreDataFeedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94972E2424ED23FC0091809A /* CoreDataFeedStore.swift */; };
 		94A5888A24EE6F7900E7C68A /* FeedStoreChallenge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08CE2B8B2285BBD100183A1B /* FeedStoreChallenge.framework */; };
 		94A5889324EE6F9000E7C68A /* IntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A5889124EE6F9000E7C68A /* IntegrationTests.swift */; };
-		94A5889424EE6F9000E7C68A /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 94A5889224EE6F9000E7C68A /* Info.plist */; };
 		94A5889524EE701400E7C68A /* XCTestCase+MemoryLeakTracking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 949C699924E536860043A32A /* XCTestCase+MemoryLeakTracking.swift */; };
 /* End PBXBuildFile section */
 
@@ -244,7 +243,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1140;
-				LastUpgradeCheck = 1010;
+				LastUpgradeCheck = 1140;
 				ORGANIZATIONNAME = "Essential Developer";
 				TargetAttributes = {
 					08CE2B8A2285BBD100183A1B = {
@@ -299,7 +298,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				94A5889424EE6F9000E7C68A /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
