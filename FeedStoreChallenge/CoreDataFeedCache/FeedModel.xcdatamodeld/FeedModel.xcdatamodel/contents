@@ -2,7 +2,7 @@
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="16119" systemVersion="19D76" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="ManagedFeed" representedClassName="ManagedFeed" syncable="YES">
         <attribute name="timestamp" attributeType="Date" usesScalarValueType="NO"/>
-        <relationship name="items" toMany="YES" deletionRule="No Action" ordered="YES" destinationEntity="ManagedFeedImage"/>
+        <relationship name="items" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="ManagedFeedImage"/>
     </entity>
     <entity name="ManagedFeedImage" representedClassName="ManagedFeedImage" syncable="YES">
         <attribute name="descriptions" optional="YES" attributeType="String"/>
@@ -11,7 +11,7 @@
         <attribute name="url" attributeType="URI"/>
     </entity>
     <elements>
-        <element name="ManagedFeed" positionX="0" positionY="0" width="0" height="0"/>
-        <element name="ManagedFeedImage" positionX="0" positionY="0" width="0" height="0"/>
+        <element name="ManagedFeed" positionX="0" positionY="0" width="128" height="73"/>
+        <element name="ManagedFeedImage" positionX="0" positionY="0" width="128" height="103"/>
     </elements>
 </model>
