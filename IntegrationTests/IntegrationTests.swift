@@ -28,7 +28,7 @@ class IntegrationTests: XCTestCase {
         
         insert(feed: feed, with: firstAppLaunchSUT)
 
-        expec(with: secondAppLaunchSUT, toLoad: feed)
+        expect(with: secondAppLaunchSUT, toLoad: feed)
     }
     
     // MARK: - Helpers
@@ -49,7 +49,7 @@ class IntegrationTests: XCTestCase {
         wait(for: [expec], timeout: 1.0)
     }
     
-    private func expec(with store: FeedStore, toLoad expectedFeed: [LocalFeedImage], file: StaticString = #file, line: UInt = #line) {
+    private func expect(with store: FeedStore, toLoad expectedFeed: [LocalFeedImage], file: StaticString = #file, line: UInt = #line) {
         let expec = expectation(description: "should retrieve feed")
         store.retrieve { result in
             switch result {
