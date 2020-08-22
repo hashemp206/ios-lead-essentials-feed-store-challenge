@@ -63,18 +63,16 @@ public final class CoreDataFeedStore: FeedStore {
         return container.newBackgroundContext()
     }()
     
-    public init(storeURL: URL) {
+    public init(storeURL: URL) throws {
         let modelURL = Bundle(for: type(of: self)).url(forResource: "FeedModel", withExtension: "momd")!
 
         let model = NSManagedObjectModel(contentsOf: modelURL)!
         let container = NSPersistentContainer(name: "CoreDataFeedStore", managedObjectModel: model)
         let description = NSPersistentStoreDescription(url: storeURL)
         container.persistentStoreDescriptions = [description]
-        container.loadPersistentStores { storeDescription, error in
-            if let error = error {
-                fatalError("unable to load persistant error: \(error)")
-            }
-        }
+        var loadError: Swift.Error?
+        container.loadPersistentStores { loadError = $1 }
+        try loadError.map { throw $0 }
         
         self.container = container
     }

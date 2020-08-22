@@ -89,10 +89,14 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 	// - MARK: Helpers
 	
 	private func makeSUT() -> FeedStore {
-        let blackHoleURL = URL(fileURLWithPath: "/dev/null")
-        let sut = CoreDataFeedStore(storeURL: blackHoleURL)
-        trackForMemoryLeaks(sut)
-        return sut
+        do {
+            let blackHoleURL = URL(fileURLWithPath: "/dev/null")
+            let sut = try CoreDataFeedStore(storeURL: blackHoleURL)
+            trackForMemoryLeaks(sut)
+            return sut
+        } catch {
+            fatalError("Couldn't initialize CoreDataFeedStore: \(error)")
+        }
 	}
 	
 }

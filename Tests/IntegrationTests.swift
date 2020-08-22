@@ -45,10 +45,13 @@ class IntegrationTests: XCTestCase {
     // MARK: - Helpers
     
     private func makeSUT() -> FeedStore {
-        let blackHoleURL = testSpecificStoreURL()
-        let sut = CoreDataFeedStore(storeURL: blackHoleURL)
-        trackForMemoryLeaks(sut)
-        return sut
+        do {
+            let sut = try CoreDataFeedStore(storeURL: testSpecificStoreURL())
+            trackForMemoryLeaks(sut)
+            return sut
+        } catch {
+            fatalError("Couldn't initialize CoreDataFeedStore: \(error)")
+        }
     }
     
     private func insert(feed: [LocalFeedImage], with store: FeedStore, file: StaticString = #file, line: UInt = #line) {
