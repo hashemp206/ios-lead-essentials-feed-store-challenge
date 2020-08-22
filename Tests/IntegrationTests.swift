@@ -31,6 +31,17 @@ class IntegrationTests: XCTestCase {
         expect(with: secondAppLaunchSUT, toLoad: feed)
     }
     
+    func test_coreDataDeletedDataRemainsDeletedAcrossAppLaunches() {
+        let firstAppLaunchSUT = makeSUT()
+        let secondAppLaunchSUT = makeSUT()
+        let thirdAppLaunchSUT = makeSUT()
+        let feed = uniqueImageFeed()
+        
+        insert(feed: feed, with: firstAppLaunchSUT)
+        delete(with: secondAppLaunchSUT)
+        expect(with: thirdAppLaunchSUT, toLoad: [])
+    }
+    
     // MARK: - Helpers
     
     private func makeSUT() -> FeedStore {
@@ -45,6 +56,15 @@ class IntegrationTests: XCTestCase {
         store.insert(feed, timestamp: Date()) { error in
            XCTAssertNil(error, "error saving feed", file: file, line: line)
            expec.fulfill()
+        }
+        wait(for: [expec], timeout: 1.0)
+    }
+    
+    private func delete(with store: FeedStore, file: StaticString = #file, line: UInt = #line) {
+        let expec = expectation(description: "should delete feed")
+        store.deleteCachedFeed { error in
+            XCTAssertNil(error, "error deleting feed", file: file, line: line)
+            expec.fulfill()
         }
         wait(for: [expec], timeout: 1.0)
     }

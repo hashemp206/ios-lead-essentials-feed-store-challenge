@@ -86,6 +86,7 @@ public final class CoreDataFeedStore: FeedStore {
     private func deleteCurrentFeed() throws {
         if let currentFeed = try fetchCurrentFeed() {
             context.delete(currentFeed)
+            try context.save()
         }
     }
     
