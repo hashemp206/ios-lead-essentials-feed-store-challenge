@@ -39,12 +39,6 @@ extension ManagedFeed {
     @NSManaged internal var items: NSOrderedSet
 }
 
-// MARK: Generated accessors for items
-extension ManagedFeed {
-
-    @objc(addItems:)
-    @NSManaged internal func addToItems(_ values: NSOrderedSet)
-}
 
 @objc(ManagedFeedImage)
 private class ManagedFeedImage: NSManagedObject {
