@@ -24,6 +24,17 @@ extension ManagedFeed {
         return NSFetchRequest<ManagedFeed>(entityName: "ManagedFeed")
     }
 
+    internal class func managedFeedImages(from feed: [LocalFeedImage], context: NSManagedObjectContext) -> [ManagedFeedImage] {
+       return feed.map { localFeedImage -> ManagedFeedImage in
+            let item = ManagedFeedImage(context: context)
+            item.id = localFeedImage.id
+            item.descriptions = localFeedImage.description
+            item.location = localFeedImage.location
+            item.url = localFeedImage.url
+            return item
+        }
+    }
+    
     @NSManaged internal var timestamp: Date
     @NSManaged internal var items: NSOrderedSet
 }
@@ -129,16 +140,7 @@ public final class CoreDataFeedStore: FeedStore {
             do {
                 let coredataFeed = try self.uniqueFeed()
                 coredataFeed.timestamp = timestamp
-                let coredataFeedImages = feed.map { localFeedImage -> ManagedFeedImage in
-                    let item = ManagedFeedImage(context: context)
-                    item.id = localFeedImage.id
-                    item.descriptions = localFeedImage.description
-                    item.location = localFeedImage.location
-                    item.url = localFeedImage.url
-                    return item
-                }
-                
-                coredataFeed.addToItems(NSOrderedSet(array: coredataFeedImages))
+                coredataFeed.items = NSOrderedSet(array: ManagedFeed.managedFeedImages(from: feed, context: context))
                 
                 try context.save()
                 completion(.none)
